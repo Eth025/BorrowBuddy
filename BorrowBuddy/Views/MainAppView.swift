@@ -22,7 +22,7 @@ struct MainAppView: View {
                 }
         }
         .navigationBarBackButtonHidden(true)
-    }
+    }   
 }
 
 #Preview {
