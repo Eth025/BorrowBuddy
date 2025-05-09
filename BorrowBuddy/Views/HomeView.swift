@@ -21,6 +21,7 @@ struct HomeView: View {
                     Spacer()
                 }
             }
+            //whatup my g
         }
         .edgesIgnoringSafeArea(.bottom)
         .navigationBarBackButtonHidden(true)
