@@ -17,7 +17,7 @@ struct HomeView: View {
             GeometryReader {geo in
                 VStack {
                     BorrowedBooks()
-                        .frame(height: geo.size.height - 100) // or calculate dynamically
+                        .frame(height: geo.size.height - 100) 
                     Spacer()
                 }
             }
