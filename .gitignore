@@ -1,0 +1,51 @@
+# macOS system files
+.DS_Store
+
+# Xcode user-specific files
+xcuserdata/
+*.xcuserstate
+
+# Xcode scheme management
+*.xcscmblueprint
+
+# Derived data and build artifacts
+DerivedData/
+build/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Xcode playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# App archives
+*.xcarchive
+
+# Signing stuff
+*.mobileprovision
+*.xcuserstate
+
+# Environment files
+.env
+
+# Firebase
+GoogleService-Info.plist
+
+
+
+
