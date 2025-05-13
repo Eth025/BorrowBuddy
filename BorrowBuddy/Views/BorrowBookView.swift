@@ -9,6 +9,7 @@ import SwiftUI
 
 struct BorrowBookView: View {
     @Environment(\.presentationMode) private var presentationMode
+    @EnvironmentObject var user: UserModel
     @State private var selection: BorrowLend = .borrowing
     @State private var friendName: String = ""
     @State private var bookTitle: String = ""
@@ -18,21 +19,21 @@ struct BorrowBookView: View {
     @State private var showDatePicker: Bool = false
     @State private var showSaveAlert: Bool = false
 
-    // For alert content
+    // Alert capture
     @State private var alertFriend: String = ""
     @State private var alertBook: String = ""
     @State private var alertDuration: String = ""
 
-    // Friends list and their corresponding book collections
+    // Data
     private let friendsList = ["", "Angelina", "Ethan", "Zack", "Vivek", "Alice", "Dylan", "Diana"]
     private let friendBooks: [String: [String]] = [
-        "Angelina": ["Pride and Prejudice - Jane Austen", "To Kill a Mockingbird - Harper Lee"],
-        "Ethan": ["1984 - George Orwell", "Animal Farm - George Orwell"],
-        "Zack": ["Dune - Frank Herbert", "Neuromancer - William Gibson"],
-        "Vivek": ["The Lean Startup - Eric Ries", "Clean Code - Robert Cecil Martin"],
-        "Alice": ["Moby Dick - Herman Melville", "Jane Eyre - Charlotte Brontë"],
-        "Dylan": ["The Hobbit - J.R.R. Tolkien", "The Silmarillion"],
-        "Diana": ["Wuthering Heights - Emily Brontë", "Hamlet - William Shakespeare"]
+        "Angelina": ["Pride and Prejudice", "To Kill a Mockingbird"],
+        "Ethan": ["1984", "Animal Farm"],
+        "Zack": ["Dune", "Neuromancer"],
+        "Vivek": ["The Lean Startup", "Clean Code"],
+        "Alice": ["Moby Dick", "Jane Eyre"],
+        "Dylan": ["The Hobbit", "The Silmarillion"],
+        "Diana": ["Wuthering Heights", "Hamlet"]
     ]
 
     enum BorrowLend: String, CaseIterable {
@@ -65,7 +66,6 @@ struct BorrowBookView: View {
 
             if selection == .borrowing {
                 Group {
-                    // Add Friends with dropdown and blank option
                     Text("Add Friends").font(.headline)
                     Menu {
                         ForEach(friendsList, id: \.self) { friend in
@@ -90,7 +90,6 @@ struct BorrowBookView: View {
                         .cornerRadius(8)
                     }
 
-                    // Add Book dropdown based on selected friend
                     Text("Add Book").font(.headline)
                     Menu {
                         ForEach(friendBooks[friendName] ?? [], id: \.self) { book in
@@ -111,7 +110,6 @@ struct BorrowBookView: View {
                         .cornerRadius(8)
                     }
 
-                    // Add Duration
                     Text("Add Duration").font(.headline)
                     HStack {
                         Text(isDateRangeSelected ? dateRangeText : "How long are you borrowing for?")
@@ -139,7 +137,6 @@ struct BorrowBookView: View {
                         .frame(maxWidth: 300)
                     }
 
-                    // Add Comments
                     Text("Add Comments").font(.headline)
                     TextField("Add text (not required)", text: .constant(""))
                         .padding(12)
@@ -147,7 +144,6 @@ struct BorrowBookView: View {
                         .cornerRadius(8)
                 }
             } else {
-                // Add Book to Collection Flow
                 Text("Add Book").font(.headline)
                 HStack {
                     Image(systemName: "magnifyingglass").foregroundColor(.gray)
@@ -160,15 +156,18 @@ struct BorrowBookView: View {
 
             Spacer()
 
-            // Save Button
             Button(action: {
                 guard canSave else { return }
-                // Capture alert values
+                // Append to model
+                if selection == .borrowing {
+                    user.booksBorrowing.append(Book(title: bookTitle, author: nil, friendBorrowingFrom: friendName, dateToReturn: endDate))
+                }
+                // Capture for alert
                 alertFriend = friendName
                 alertBook = bookTitle
                 alertDuration = selection == .borrowing ? dateRangeText : ""
                 showSaveAlert = true
-                // Reset fields after capturing
+                // Reset fields
                 if selection == .borrowing {
                     friendName = ""
                     bookTitle = ""
@@ -192,13 +191,13 @@ struct BorrowBookView: View {
                     return Alert(
                         title: Text("Happy reading!"),
                         message: Text("You are borrowing “\(alertBook)” from \(alertFriend) for \(alertDuration). Enjoy!"),
-                        dismissButton: .default(Text("OK")) { presentationMode.wrappedValue.dismiss() }
+                        dismissButton: .default(Text("OK"))
                     )
                 case .addBook:
                     return Alert(
                         title: Text("Book Added!"),
                         message: Text("You have read \(alertBook)."),
-                        dismissButton: .default(Text("OK")) { presentationMode.wrappedValue.dismiss() }
+                        dismissButton: .default(Text("OK"))
                     )
                 }
             }
@@ -213,5 +212,5 @@ struct BorrowBookView: View {
 }
 
 #Preview {
-    NavigationView { BorrowBookView() }
+    NavigationView { BorrowBookView().environmentObject(UserModel()) }
 }
