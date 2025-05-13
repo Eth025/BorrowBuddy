@@ -3,6 +3,7 @@ import Foundation
 
 struct LoginView: View {
     @StateObject private var user = UserModel()
+    @StateObject private var friendModel = FriendModel()
     @State private var navigationOn = false
     
     var body: some View {
@@ -23,13 +24,17 @@ struct LoginView: View {
                 
                 LoginButton(navigationOn: $navigationOn)
                 
-                NavigationLink(destination: MainAppView().onAppear {user.loadSampleData() }, isActive: $navigationOn) {
+                NavigationLink(destination: MainAppView()
+                    .environmentObject(user)
+                    .environmentObject(friendModel)
+                    .onAppear {user.loadSampleData() }, isActive: $navigationOn) {
                     EmptyView()
                     // Delete onAppear when adding a book has been created. This is just to preview sample data. 
                 }
             }
         }
         .environmentObject(user)
+        .environmentObject(friendModel)
     }
 }
 

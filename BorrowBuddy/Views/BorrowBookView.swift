@@ -10,9 +10,11 @@ import SwiftUI
 struct BorrowBookView: View {
     @Environment(\.presentationMode) private var presentationMode
     @EnvironmentObject var user: UserModel
+    @EnvironmentObject var friendModel: FriendModel
     @State private var selection: BorrowLend = .borrowing
     @State private var friendName: String = ""
     @State private var bookTitle: String = ""
+    @State private var bookAuthor: String = ""
     @State private var startDate: Date = Calendar.current.startOfDay(for: Date())
     @State private var endDate: Date = Calendar.current.startOfDay(for: Date())
     @State private var isDateRangeSelected: Bool = false
@@ -20,7 +22,9 @@ struct BorrowBookView: View {
     @State private var showSaveAlert: Bool = false
 
     // Data for dropdowns
-    private let friendsList = ["", "Angelina", "Ethan", "Zack", "Vivek", "Alice", "Dylan", "Diana"]
+    private var friendsList: [String] {
+        [""] + friendModel.friends
+    }
     private let friendBooks: [String: [String]] = [
         "Angelina": ["Pride and Prejudice", "To Kill a Mockingbird"],
         "Ethan": ["1984", "Animal Farm"],
@@ -87,22 +91,23 @@ struct BorrowBookView: View {
                 }
 
                 Text("Add Book").font(.headline)
-                Menu {
-                    ForEach(friendBooks[friendName] ?? [], id: \.self) { book in
-                        Button(action: { bookTitle = book }) { Text(book) }
-                    }
-                } label: {
-                    HStack {
-                        Image(systemName: "book.fill").foregroundColor(.gray)
-                        Text(bookTitle.isEmpty ? "Select a book" : bookTitle)
-                            .foregroundColor(bookTitle.isEmpty ? .gray : .primary)
-                        Spacer()
-                        Image(systemName: "chevron.down").foregroundColor(.gray)
-                    }
-                    .padding(12)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
+                HStack {
+                    Image(systemName: "book.fill").foregroundColor(.gray)
+                    TextField("Name of book", text: $bookTitle)
                 }
+                .padding(12)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
+                
+                Text("Add Author").font(.headline)
+                HStack {
+                    Image(systemName: "pencil").foregroundColor(.gray)
+                    TextField("Author name", text: $bookAuthor)
+                }
+                
+                .padding(12)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
 
                 Text("Add Duration").font(.headline)
                 HStack {
@@ -138,10 +143,15 @@ struct BorrowBookView: View {
                 // Save for borrowing
                 Button {
                     guard canSaveBorrow else { return }
-                    user.booksBorrowing.append(Book(title: bookTitle, author: nil, friendBorrowingFrom: friendName, dateToReturn: endDate))
+                    user.booksBorrowing.append(Book(title: bookTitle, author: bookAuthor.isEmpty ? nil : bookAuthor, friendBorrowingFrom: friendName, dateToReturn: endDate))
                     showSaveAlert = true
                     // reset
-                    friendName = ""; bookTitle = ""; startDate = Date(); endDate = Date(); isDateRangeSelected = false
+                    friendName = ""
+                    bookTitle = ""
+                    bookAuthor = ""
+                    startDate = Date()
+                    endDate = Date()
+                    isDateRangeSelected = false
                 } label: {
                     Text("Save").font(.headline).foregroundColor(.white)
                         .frame(maxWidth: .infinity).padding()
@@ -207,5 +217,9 @@ struct BorrowBookView: View {
 }
 
 #Preview {
-    NavigationView { BorrowBookView().environmentObject(UserModel()) }
+    NavigationView {
+        BorrowBookView()
+            .environmentObject(UserModel())
+            .environmentObject(FriendModel())
+    }
 }

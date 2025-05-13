@@ -31,5 +31,6 @@ struct MainAppView: View {
     sampleUser.loadSampleData()  // Load sample data for testing
 
     return MainAppView()
-        .environmentObject(sampleUser)  // Inject the user into the environment
+        .environmentObject(sampleUser) // Inject the user into the environment
+        .environmentObject(FriendModel())
 }

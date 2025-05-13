@@ -8,16 +8,16 @@
 import SwiftUI
 
 struct FriendView: View {
-    @State private var friends: [String] = ["Angelina", "Ethan", "Zack", "Vivek", "Alice", "Dylan", "Diana"]
+    @EnvironmentObject var friendModel: FriendModel
     @State private var showingAddFriend = false
     @State private var searchText: String = ""
 
     //filters friends based on search text, prioritising prefix matches
     private var filteredFriends: [String] {
         if searchText.isEmpty {
-            return friends
+            return friendModel.friends
         } else {
-            return friends
+            return friendModel.friends
                 .filter { $0.lowercased().contains(searchText.lowercased()) }
                 .sorted {
                     $0.lowercased().hasPrefix(searchText.lowercased()) &&
@@ -69,7 +69,7 @@ struct FriendView: View {
                                     HStack {
                                         Text(friend)
                                             .foregroundColor(.black)
-                                        Text("(Click to view their profile)")
+                                        Text("(View profile in the next update!)")
                                             .foregroundColor(.gray)
                                             .italic()
                                     }
@@ -91,8 +91,8 @@ struct FriendView: View {
             .padding(.top)
             .sheet(isPresented: $showingAddFriend) {
                 AddFriendView { newFriend in
-                    if !friends.contains(newFriend) {
-                        friends.append(newFriend)
+                    if !friendModel.friends.contains(newFriend) {
+                        friendModel.friends.append(newFriend)
                     }
                 }
             }
@@ -105,4 +105,5 @@ struct FriendView: View {
 
 #Preview {
     FriendView()
+        .environmentObject(FriendModel())
 }
