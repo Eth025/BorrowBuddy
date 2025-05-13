@@ -18,6 +18,23 @@ struct BorrowBookView: View {
     @State private var showDatePicker: Bool = false
     @State private var showSaveAlert: Bool = false
 
+    // For alert content
+    @State private var alertFriend: String = ""
+    @State private var alertBook: String = ""
+    @State private var alertDuration: String = ""
+
+    // Friends list and their corresponding book collections
+    private let friendsList = ["", "Angelina", "Ethan", "Zack", "Vivek", "Alice", "Dylan", "Diana"]
+    private let friendBooks: [String: [String]] = [
+        "Angelina": ["Pride and Prejudice - Jane Austen", "To Kill a Mockingbird - Harper Lee"],
+        "Ethan": ["1984 - George Orwell", "Animal Farm - George Orwell"],
+        "Zack": ["Dune - Frank Herbert", "Neuromancer - William Gibson"],
+        "Vivek": ["The Lean Startup - Eric Ries", "Clean Code - Robert Cecil Martin"],
+        "Alice": ["Moby Dick - Herman Melville", "Jane Eyre - Charlotte Brontë"],
+        "Dylan": ["The Hobbit - J.R.R. Tolkien", "The Silmarillion"],
+        "Diana": ["Wuthering Heights - Emily Brontë", "Hamlet - William Shakespeare"]
+    ]
+
     enum BorrowLend: String, CaseIterable {
         case borrowing = "Borrowing"
         case addBook = "Add Book"
@@ -26,23 +43,19 @@ struct BorrowBookView: View {
     private var canSave: Bool {
         switch selection {
         case .borrowing:
-            return !friendName.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !bookTitle.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   isDateRangeSelected
+            return !friendName.isEmpty && !bookTitle.isEmpty && isDateRangeSelected
         case .addBook:
-            return !bookTitle.trimmingCharacters(in: .whitespaces).isEmpty
+            return !bookTitle.isEmpty
         }
     }
 
     private var dateRangeText: String {
-        let fmt = DateFormatter()
-        fmt.dateStyle = .medium
+        let fmt = DateFormatter(); fmt.dateStyle = .medium
         return "\(fmt.string(from: startDate)) – \(fmt.string(from: endDate))"
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Mode Picker
             Picker("", selection: $selection) {
                 ForEach(BorrowLend.allCases, id: \.self) { option in
                     Text(option.rawValue).tag(option)
@@ -52,27 +65,51 @@ struct BorrowBookView: View {
 
             if selection == .borrowing {
                 Group {
-                    // Add Friends with magnifying glass
+                    // Add Friends with dropdown and blank option
                     Text("Add Friends").font(.headline)
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.gray)
-                        TextField("Type friend’s name or use drop down menu", text: $friendName)
+                    Menu {
+                        ForEach(friendsList, id: \.self) { friend in
+                            Button(action: {
+                                friendName = friend
+                                bookTitle = ""
+                                isDateRangeSelected = false
+                            }) {
+                                Text(friend.isEmpty ? "— None —" : friend)
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "person.fill").foregroundColor(.gray)
+                            Text(friendName.isEmpty ? "Select a friend" : friendName)
+                                .foregroundColor(friendName.isEmpty ? .gray : .primary)
+                            Spacer()
+                            Image(systemName: "chevron.down").foregroundColor(.gray)
+                        }
+                        .padding(12)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
                     }
-                    .padding(12)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
 
-                    // Add Book with magnifying glass
+                    // Add Book dropdown based on selected friend
                     Text("Add Book").font(.headline)
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.gray)
-                        TextField("Book Title", text: $bookTitle)
+                    Menu {
+                        ForEach(friendBooks[friendName] ?? [], id: \.self) { book in
+                            Button(action: { bookTitle = book }) {
+                                Text(book)
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "book.fill").foregroundColor(.gray)
+                            Text(bookTitle.isEmpty ? "Select a book" : bookTitle)
+                                .foregroundColor(bookTitle.isEmpty ? .gray : .primary)
+                            Spacer()
+                            Image(systemName: "chevron.down").foregroundColor(.gray)
+                        }
+                        .padding(12)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
                     }
-                    .padding(12)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
 
                     // Add Duration
                     Text("Add Duration").font(.headline)
@@ -82,9 +119,7 @@ struct BorrowBookView: View {
                             .padding(12)
                         Spacer()
                         Button(action: { showDatePicker.toggle() }) {
-                            Image(systemName: "plus.circle")
-                                .font(.title2)
-                                .foregroundColor(.blue)
+                            Image(systemName: "plus.circle").font(.title2).foregroundColor(.blue)
                         }
                     }
                     .background(Color(.systemGray6))
@@ -115,8 +150,7 @@ struct BorrowBookView: View {
                 // Add Book to Collection Flow
                 Text("Add Book").font(.headline)
                 HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
+                    Image(systemName: "magnifyingglass").foregroundColor(.gray)
                     TextField("Name of book", text: $bookTitle)
                 }
                 .padding(12)
@@ -129,9 +163,12 @@ struct BorrowBookView: View {
             // Save Button
             Button(action: {
                 guard canSave else { return }
+                // Capture alert values
+                alertFriend = friendName
+                alertBook = bookTitle
+                alertDuration = selection == .borrowing ? dateRangeText : ""
                 showSaveAlert = true
-
-                // Reset fields
+                // Reset fields after capturing
                 if selection == .borrowing {
                     friendName = ""
                     bookTitle = ""
@@ -142,14 +179,10 @@ struct BorrowBookView: View {
                     bookTitle = ""
                 }
             }) {
-                Text("Save")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(canSave ? Color.blue : Color.gray)
-                    .cornerRadius(10)
-                    .opacity(canSave ? 1.0 : 0.5)
+                Text("Save").font(.headline).foregroundColor(.white)
+                    .frame(maxWidth: .infinity).padding()
+                    .background(canSave ? Color.blue : Color.gray).cornerRadius(10)
+                    .opacity(canSave ? 1 : 0.5)
             }
             .padding(.bottom)
             .disabled(!canSave)
@@ -158,13 +191,13 @@ struct BorrowBookView: View {
                 case .borrowing:
                     return Alert(
                         title: Text("Happy reading!"),
-                        message: Text("You are borrowing “\(bookTitle)” from \(friendName) for \(dateRangeText). Enjoy!"),
+                        message: Text("You are borrowing “\(alertBook)” from \(alertFriend) for \(alertDuration). Enjoy!"),
                         dismissButton: .default(Text("OK")) { presentationMode.wrappedValue.dismiss() }
                     )
                 case .addBook:
                     return Alert(
                         title: Text("Book Added!"),
-                        message: Text("You have read \(bookTitle)."),
+                        message: Text("You have read \(alertBook)."),
                         dismissButton: .default(Text("OK")) { presentationMode.wrappedValue.dismiss() }
                     )
                 }
@@ -173,9 +206,7 @@ struct BorrowBookView: View {
         .padding()
         .navigationTitle(selection.rawValue)
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarItems(leading: Button(action: {
-            presentationMode.wrappedValue.dismiss()
-        }) {
+        .navigationBarItems(leading: Button(action: { presentationMode.wrappedValue.dismiss() }) {
             Image(systemName: "arrow.left").foregroundColor(.blue)
         })
     }
